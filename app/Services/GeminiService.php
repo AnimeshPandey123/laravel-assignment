@@ -58,6 +58,21 @@ class GeminiService
             'Content-Type' => 'application/json'
         ])->post($url, $payload);
 
-        return $response->json();
+        if ($response->failed()) {
+            return ['error' => 'Failed to connect to Gemini API'];
+        }
+
+        $data = $response->json();
+
+        // Extract the JSON text inside the response
+        $rawText = $data['candidates'][0]['content']['parts'][0]['text'] ?? '';
+
+        // Remove markdown code block markers (```json ... ```)
+        $cleanJson = preg_replace('/^```json\n|\n```$/', '', trim($rawText));
+
+        // Decode the cleaned JSON string
+        $parsedData = json_decode($cleanJson, true);
+
+        return $parsedData ?: ['error' => 'Failed to parse response'];
     }
 }
