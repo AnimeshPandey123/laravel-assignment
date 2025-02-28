@@ -15,7 +15,7 @@ class GeminiService
 
     public function analyzeResume($resume, $jobDescription)
     {
-        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={$this->apiKey}";
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={$this->apiKey}";
 
         $prompt = "
         You are an expert ATS analyzer. Compare the skills in the resume with those required in the job description.
@@ -36,9 +36,27 @@ class GeminiService
         Respond only with the JSON object:
         ";
 
-        $response = Http::post($url, [
-            'prompt' => ['text' => $prompt],
-        ]);
+        $payload = [
+            "contents" => [
+                [
+                    "role" => "user",
+                    "parts" => [
+                        ["text" => $prompt]
+                    ]
+                ]
+            ],
+            "generationConfig" => [
+                "temperature" => 1,
+                "topK" => 40,
+                "topP" => 0.95,
+                "maxOutputTokens" => 8192,
+                "responseMimeType" => "text/plain"
+            ]
+        ];
+
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json'
+        ])->post($url, $payload);
 
         return $response->json();
     }
