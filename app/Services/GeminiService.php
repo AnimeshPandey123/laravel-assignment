@@ -25,15 +25,23 @@ class GeminiService
 
         Job Description:
         {$jobDescription}
-
-        Provide a detailed analysis in JSON format with the following keys:
-        1. \"matched_skills\": List of skills found in both the resume and job description
-        2. \"missing_skills\": List of skills in the job description but missing from the resume
-        3. \"suggested_skills\": List of additional relevant skills to consider adding
-        4. \"score\": A numeric score from 0-100 indicating the skills match percentage
-        5. \"explanation\": A brief explanation of your analysis
-
-        Respond only with the JSON object:
+         Generate a JSON report with the following structure:
+        {
+            \"matched_skills\": [List of skills found in both the resume and job description],
+            \"missing_skills\": [List of required skills absent in the resume],
+            \"suggested_skills\": [Additional skills that could strengthen the candidate's profile],
+            \"matched_keywords\": [Key phrases present in both documents],
+            \"missing_keywords\": [Key phrases present in the job description but not in the resume],
+            \"experience_match\": {\"percentage\": %, \"details\": 'Experience relevance breakdown with confidence level'},
+            \"education_match\": {\"percentage\": %, \"details\": 'Education relevance breakdown'},
+            \"certifications_match\": {\"percentage\": %, \"details\": 'Certification relevance breakdown'},
+            \"job_fit_score\": {\"overall_score\": %, \"breakdown\": { \"skills\": 40%, \"experience\": 30%, \"education\": 20%, \"certifications\": 10% }},
+            \"strengths\": [Key strengths found in the resume],
+            \"weaknesses\": [Areas that need improvement],
+            \"recommendations\": [Personalized improvement tips such as skills to learn, keywords to add, and relevant certifications or courses to take],
+        }
+        
+        Ensure semantic matching is used to recognize related skills even if phrased differently. Respond only with the JSON output, without any additional text.
         ";
 
         $payload = [
