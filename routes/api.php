@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\GeminiController;
+use App\Http\Controllers\JobApplicationController;
 use App\Http\Controllers\ResumeController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
@@ -31,4 +32,12 @@ Route::prefix('resumes')->group(function () {
     Route::get('/{id}', [ResumeController::class, 'show']);
     Route::put('/{id}', [ResumeController::class, 'update']);
     Route::delete('/{id}', [ResumeController::class, 'destroy']);
+});
+
+Route::prefix('jobs')->group(function () {
+    Route::post('/', [JobApplicationController::class, 'store']);
+    Route::get('/', [JobApplicationController::class, 'index']);
+    Route::get('/{id}', [JobApplicationController::class, 'show']);
+    Route::put('/{id}', [JobApplicationController::class, 'update']);
+    Route::delete('/{id}', [JobApplicationController::class, 'destroy']);
 });
