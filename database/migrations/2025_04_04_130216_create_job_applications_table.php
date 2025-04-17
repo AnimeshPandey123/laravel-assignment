@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('company');
             $table->string('position');
             $table->string('status');
-            $table->date('date_applied');
+            $table->date('date_applied')->nullable();
             $table->foreignId('resume_id')->references('id')->on('resumes')->constrained()->onDelete('cascade');
             $table->text('description');
             $table->text('notes');
