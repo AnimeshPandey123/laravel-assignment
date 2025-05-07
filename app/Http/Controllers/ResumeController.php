@@ -8,14 +8,27 @@ use App\Models\Education;
 use App\Models\Skill;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
 class ResumeController extends Controller
 {
+    /**
+     * Constructor to ensure authenticated users only
+     */
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
+    /**
+     * Create a new resume for the authenticated user
+     */
     public function store(Request $request)
     {
+        $user = Auth::user();
+        
         $validator = Validator::make($request->all(), [
-            'user_id' => 'required|exists:users,id',
             'title' => 'nullable|string',
             'summary' => 'nullable|string',
             'experiences' => 'array',
@@ -42,7 +55,10 @@ class ResumeController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $resume = Resume::create($request->only(['user_id', 'title', 'summary']));
+        // Create resume with authenticated user's ID
+        $resume = new Resume($request->only(['title', 'summary']));
+        $resume->user_id = $user->id;
+        $resume->save();
 
         if ($request->has('experiences')) {
             $resume->experiences()->createMany($request->experiences);
@@ -69,25 +85,32 @@ class ResumeController extends Controller
     }
 
     /**
-     * Get a specific resume with details.
+     * Get a specific resume with details (only if it belongs to the authenticated user)
      */
     public function show($id)
     {
+        $user = Auth::user();
         $resume = Resume::with(['experiences', 'education', 'skills'])->find($id);
 
         if (!$resume) {
             return response()->json(['message' => 'Resume not found'], 404);
         }
 
+        // Check if the resume belongs to the authenticated user
+        if ($resume->user_id !== $user->id) {
+            return response()->json(['message' => 'Unauthorized access'], 403);
+        }
+
         return response()->json($resume);
     }
 
     /**
-     * Get all resumes for a specific user.
+     * Get all resumes for the authenticated user
      */
-    public function index(Request $request)
+    public function index()
     {
-        $resumes = Resume::where('user_id', $request->user_id)
+        $user = Auth::user();
+        $resumes = Resume::where('user_id', $user->id)
             ->with(['experiences', 'education', 'skills'])
             ->get();
 
@@ -95,14 +118,20 @@ class ResumeController extends Controller
     }
 
     /**
-     * Update a resume and its related data.
+     * Update a resume and its related data (only if it belongs to the authenticated user)
      */
-
     public function update(Request $request, $id)
     {
+        $user = Auth::user();
         $resume = Resume::find($id);
+        
         if (!$resume) {
             return response()->json(['message' => 'Resume not found'], 404);
+        }
+        
+        // Check if the resume belongs to the authenticated user
+        if ($resume->user_id !== $user->id) {
+            return response()->json(['message' => 'Unauthorized access'], 403);
         }
     
         $validator = Validator::make($request->all(), [
@@ -142,7 +171,11 @@ class ResumeController extends Controller
                 $exp['end_date'] = isset($exp['end_date']) ? Carbon::parse($exp['end_date'])->format('Y-m-d') : null;
     
                 if (isset($exp['id'])) {
-                    Experience::where('id', $exp['id'])->update($exp);
+                    // Verify that the experience belongs to this resume
+                    $experience = Experience::where('id', $exp['id'])->where('resume_id', $resume->id)->first();
+                    if ($experience) {
+                        $experience->update($exp);
+                    }
                 } else {
                     $resume->experiences()->create($exp);
                 }
@@ -155,7 +188,11 @@ class ResumeController extends Controller
                 $edu['end_date'] = isset($edu['end_date']) ? Carbon::parse($edu['end_date'])->format('Y-m-d') : null;
     
                 if (isset($edu['id'])) {
-                    Education::where('id', $edu['id'])->update($edu);
+                    // Verify that the education record belongs to this resume
+                    $education = Education::where('id', $edu['id'])->where('resume_id', $resume->id)->first();
+                    if ($education) {
+                        $education->update($edu);
+                    }
                 } else {
                     $resume->education()->create($edu);
                 }
@@ -179,12 +216,21 @@ class ResumeController extends Controller
         ]);
     }
     
-
+    /**
+     * Delete a resume (only if it belongs to the authenticated user)
+     */
     public function destroy($id)
     {
+        $user = Auth::user();
         $resume = Resume::find($id);
+        
         if (!$resume) {
             return response()->json(['message' => 'Resume not found'], 404);
+        }
+        
+        // Check if the resume belongs to the authenticated user
+        if ($resume->user_id !== $user->id) {
+            return response()->json(['message' => 'Unauthorized access'], 403);
         }
 
         $resume->delete();
