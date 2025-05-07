@@ -6,6 +6,7 @@ use App\Http\Controllers\ResumeController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\AuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,13 +23,21 @@ use Illuminate\Support\Facades\Route;
 //     return $request->user();
 // });
 
-Route::get('/user', [UserController::class, 'index']);
-Route::post('/user', [UserController::class, 'store']);
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/user', [AuthController::class, 'user']);
+    Route::post('/logout', [AuthController::class, 'logout']);
+});
+
+// Route::get('/user', [UserController::class, 'index']);
+// Route::post('/user', [UserController::class, 'store']);
 
 // Route::post('/analyze-resume', [GeminiController::class, 'analyze']);
 Route::post('/analyze-resume', [GeminiController::class, 'analyzeResumeAndJobApplication']);
 
-Route::prefix('resumes')->group(function () {
+Route::prefix('resumes')->middleware('auth:sanctum')->group(function () {
     Route::post('/', [ResumeController::class, 'store']);
     Route::get('/', [ResumeController::class, 'index']);
     Route::get('/{id}', [ResumeController::class, 'show']);
@@ -36,7 +45,7 @@ Route::prefix('resumes')->group(function () {
     Route::delete('/{id}', [ResumeController::class, 'destroy']);
 });
 
-Route::prefix('jobs')->group(function () {
+Route::prefix('jobs')->middleware('auth:sanctum')->group(function () {
     Route::post('/', [JobApplicationController::class, 'store']);
     Route::get('/', [JobApplicationController::class, 'index']);
     Route::get('/{id}', [JobApplicationController::class, 'show']);
