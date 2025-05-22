@@ -35,7 +35,7 @@ Route::middleware('auth:sanctum')->group(function () {
 // Route::post('/user', [UserController::class, 'store']);
 
 // Route::post('/analyze-resume', [GeminiController::class, 'analyze']);
-Route::post('/analyze-resume', [GeminiController::class, 'analyzeResumeAndJobApplication']);
+Route::middleware('auth:sanctum')->post('/analyze-resume', [GeminiController::class, 'analyzeResumeAndJobApplication']);
 
 Route::prefix('resumes')->middleware('auth:sanctum')->group(function () {
     Route::post('/', [ResumeController::class, 'store']);
